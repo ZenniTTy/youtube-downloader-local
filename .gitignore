@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Modelos do faster-whisper baixados em runtime (centenas de MB)
+.cache/
+models/
+
+# Saídas locais de download/transcrição
+*.mp4
+*.wav
+*.vtt
+transcricao*.txt
+
+# Ferramentas e editores
+.playwright-mcp/
+.DS_Store
+.idea/
+.vscode/
+
+# Ambiente
+.env
+.env.*

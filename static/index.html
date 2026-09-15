@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube Downloader</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --border: #2a2e38;
+      --text: #e8eaed;
+      --muted: #9aa0ac;
+      --accent: #ff3b3b;
+      --accent-hover: #e02f2f;
+      --ok: #37c871;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .app { width: 100%; max-width: 640px; }
+    h1 { font-size: 1.6rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); margin: 0 0 28px; font-size: 0.95rem; }
+    .row { display: flex; gap: 10px; }
+    input[type="url"] {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    input[type="url"]:focus { border-color: var(--accent); }
+    button {
+      padding: 14px 22px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    button:hover:not(:disabled) { background: var(--accent-hover); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .card {
+      margin-top: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .preview { display: flex; gap: 16px; padding: 16px; align-items: center; }
+    .preview img {
+      width: 160px; height: 90px; object-fit: cover;
+      border-radius: 8px; flex-shrink: 0; background: #000;
+    }
+    .preview .meta { min-width: 0; }
+    .preview .title {
+      font-weight: 600; font-size: 1.05rem; margin-bottom: 6px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .preview .dur { color: var(--muted); font-size: 0.9rem; }
+    .formats { border-top: 1px solid var(--border); }
+    .fmt {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--border); gap: 12px;
+    }
+    .fmt:last-child { border-bottom: none; }
+    .fmt .info { display: flex; flex-direction: column; gap: 2px; }
+    .fmt .res { font-weight: 600; }
+    .fmt .note { color: var(--muted); font-size: 0.82rem; }
+    .fmt button { padding: 9px 18px; font-size: 0.9rem; }
+    .tx { border-top: 1px solid var(--border); padding: 16px 18px; }
+    .tx h2 { margin: 0 0 4px; font-size: 0.95rem; font-weight: 600; }
+    .tx .hint { color: var(--muted); font-size: 0.82rem; margin: 0 0 12px; }
+    .tx .ctl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .tx select, .tx input[type=text] {
+      background: #14161a; color: var(--fg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 11px; font: inherit; font-size: 0.88rem;
+    }
+    .tx select { min-width: 190px; }
+    .tx input[type=text] { flex: 1; min-width: 200px; }
+    .tx button { padding: 9px 18px; font-size: 0.9rem; }
+    #txDl { background: #1f6f3f; }
+    #txDl:hover { background: #268049; }
+    .tx .glossary { margin-top: 10px; }
+    .tx .glossary label { display: block; color: var(--muted); font-size: 0.8rem; margin-bottom: 5px; }
+    .bar { height: 6px; background: #14161a; border-radius: 999px; overflow: hidden; margin-top: 12px; }
+    .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s ease; }
+    .tx .stage { color: var(--muted); font-size: 0.84rem; margin-top: 8px; }
+    .msg { margin-top: 20px; padding: 14px 16px; border-radius: 10px; font-size: 0.95rem; }
+    .msg.error { background: #3a1414; border: 1px solid #6b2020; color: #ffb4b4; }
+    .msg.info  { background: #14263a; border: 1px solid #204a6b; color: #a9d4ff; }
+    .hidden { display: none; }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white; border-radius: 50%; display: inline-block;
+      animation: spin 0.7s linear infinite; vertical-align: -3px; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    footer { color: var(--muted); font-size: 0.8rem; margin-top: 32px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>YouTube Downloader</h1>
+    <p class="sub">Paste the link, pick a quality and download it as MP4. Local use only.</p>
+
+    <form id="form" class="row" autocomplete="off">
+      <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required />
+      <button id="go" type="submit">Fetch</button>
+    </form>
+
+    <div id="msg" class="msg hidden"></div>
+
+    <div id="card" class="card hidden">
+      <div class="preview">
+        <img id="thumb" alt="" />
+        <div class="meta">
+          <div class="title" id="title"></div>
+          <div class="dur" id="dur"></div>
+        </div>
+      </div>
+      <div class="formats" id="formats"></div>
+
+      <div class="tx" id="tx">
+        <h2>Transcript / subtitles</h2>
+        <p class="hint" id="txHint"></p>
+        <div class="ctl">
+          <select id="txLang"></select>
+          <button type="button" id="txGo">Generate text</button>
+          <button type="button" id="txDl" class="hidden">Save .txt</button>
+        </div>
+        <div class="glossary">
+          <label for="txPrompt">Technical terms in the video (helps Whisper spell them correctly)</label>
+          <input type="text" id="txPrompt" placeholder="e.g.: subagents, harness, spec-driven, Next.js" />
+        </div>
+        <div class="bar hidden" id="txBar"><i></i></div>
+        <div class="stage hidden" id="txStage"></div>
+      </div>
+    </div>
+
+    <footer>
+      For personal use (your own videos or freely licensed ones). If a link stops
+      working, YouTube may have changed — run <code>yt-dlp -U</code> in the terminal.
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const urlInput = document.getElementById("url");
+    const goBtn = document.getElementById("go");
+    const msg = document.getElementById("msg");
+    const card = document.getElementById("card");
+    const thumb = document.getElementById("thumb");
+    const titleEl = document.getElementById("title");
+    const durEl = document.getElementById("dur");
+    const formatsEl = document.getElementById("formats");
+    const txHint = document.getElementById("txHint");
+    const txLang = document.getElementById("txLang");
+    const txGo = document.getElementById("txGo");
+    const txDl = document.getElementById("txDl");
+    const txPrompt = document.getElementById("txPrompt");
+    const txBar = document.getElementById("txBar");
+    const txStage = document.getElementById("txStage");
+    let currentUrl = "";
+    let pollTimer = null;
+    let finished = false;   // prevents firing the download twice
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = "msg " + kind;
+    }
+    function hideMsg() { msg.className = "msg hidden"; }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const url = urlInput.value.trim();
+      if (!url) return;
+
+      hideMsg();
+      card.classList.add("hidden");
+      goBtn.disabled = true;
+      goBtn.innerHTML = '<span class="spinner"></span>Fetching';
+
+      try {
+        const res = await fetch("/api/info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Could not fetch the video.");
+        renderInfo(url, data);
+      } catch (err) {
+        showMsg(err.message, "error");
+      } finally {
+        goBtn.disabled = false;
+        goBtn.textContent = "Fetch";
+      }
+    });
+
+    function renderInfo(url, data) {
+      titleEl.textContent = data.title;
+      durEl.textContent = data.duration ? "Duration " + data.duration : "";
+      if (data.thumbnail) { thumb.src = data.thumbnail; thumb.style.display = ""; }
+      else { thumb.style.display = "none"; }
+
+      formatsEl.innerHTML = "";
+      for (const f of data.formats) {
+        const row = document.createElement("div");
+        row.className = "fmt";
+
+        const info = document.createElement("div");
+        info.className = "info";
+        const res = document.createElement("span");
+        res.className = "res";
+        res.textContent = f.resolution + (f.filesize ? " · " + f.filesize : "");
+        info.appendChild(res);
+        if (f.note) {
+          const note = document.createElement("span");
+          note.className = "note";
+          note.textContent = f.note;
+          info.appendChild(note);
+        }
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "Download";
+        btn.addEventListener("click", () => startDownload(url, f, btn));
+
+        row.appendChild(info);
+        row.appendChild(btn);
+        formatsEl.appendChild(row);
+      }
+      card.classList.remove("hidden");
+      currentUrl = url;
+      loadSubtitles(url);
+    }
+
+    // Builds the language selector; the first item is always the automatic choice.
+    async function loadSubtitles(url) {
+      txLang.innerHTML = "";
+      txHint.textContent = "Checking available subtitles...";
+      txBar.classList.add("hidden");
+      txStage.classList.add("hidden");
+      txDl.classList.add("hidden");
+      txGo.disabled = true;
+
+      try {
+        const res = await fetch("/api/subtitles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Could not check the subtitles.");
+
+        const manual = data.manual || [];
+        const auto = data.automatic || [];
+
+        const best = document.createElement("option");
+        best.value = "";
+        best.textContent = (manual.length || auto.length)
+          ? "Best available (recommended)"
+          : "Transcribe the audio (Whisper)";
+        txLang.appendChild(best);
+
+        const addGroup = (list, label, automatic) => {
+          if (!list.length) return;
+          const g = document.createElement("optgroup");
+          g.label = label;
+          for (const t of list) {
+            const o = document.createElement("option");
+            o.value = JSON.stringify({ lang: t.lang, automatic });
+            o.textContent = t.name;
+            g.appendChild(o);
+          }
+          txLang.appendChild(g);
+        };
+        addGroup(manual, "Official subtitles", false);
+        addGroup(auto, "Auto-generated subtitles", true);
+
+        const forced = document.createElement("option");
+        forced.value = "AUDIO";
+        forced.textContent = "Force audio transcription (slow, more accurate)";
+        txLang.appendChild(forced);
+
+        if (manual.length) {
+          txHint.textContent = "This video has an official subtitle — the text comes out in seconds.";
+        } else if (auto.length) {
+          txHint.textContent = "Only YouTube auto-generated subtitles — fast, but may get technical terms wrong.";
+        } else {
+          txHint.textContent = "No subtitles: the audio will be transcribed with Whisper (takes a few minutes).";
+        }
+        txGo.disabled = false;
+      } catch (err) {
+        txHint.textContent = err.message;
+        txGo.disabled = false;
+      }
+    }
+
+    txGo.addEventListener("click", startTranscript);
+
+    async function startTranscript() {
+      if (!currentUrl) return;
+      const raw = txLang.value;
+      const body = { url: currentUrl };
+      if (raw === "AUDIO") {
+        body.force_audio = true;
+      } else if (raw) {
+        const sel = JSON.parse(raw);
+        body.lang = sel.lang;
+        body.automatic = sel.automatic;
+      }
+      const glossary = txPrompt.value.trim();
+      if (glossary) body.prompt = glossary;
+
+      txGo.disabled = true;
+      txGo.innerHTML = '<span class="spinner"></span>Processing';
+      txDl.classList.add("hidden");
+      txBar.classList.remove("hidden");
+      txStage.classList.remove("hidden");
+      txStage.textContent = "Starting...";
+      hideMsg();
+
+      try {
+        const res = await fetch("/api/transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Could not start.");
+        pollTranscript(data.job_id);
+      } catch (err) {
+        resetTx();
+        showMsg(err.message, "error");
+      }
+    }
+
+    // Polls progress every 1.5s until it finishes or fails.
+    function pollTranscript(jobId) {
+      clearInterval(pollTimer);
+      finished = false;
+      pollTimer = setInterval(async () => {
+        if (finished) return;
+        try {
+          const res = await fetch("/api/transcript/" + jobId);
+          const d = await res.json();
+          if (!res.ok) throw new Error(d.detail || "Job lost.");
+
+          txBar.firstElementChild.style.width = Math.round(d.progress * 100) + "%";
+          txStage.textContent = d.stage + (d.source ? "  ·  via " + d.source : "");
+
+          if (d.status === "done") {
+            finished = true;
+            clearInterval(pollTimer);
+            offerDownload(jobId, d.title, d.channel);
+          } else if (d.status === "error") {
+            finished = true;
+            clearInterval(pollTimer);
+            resetTx();
+            showMsg(d.error || "Failed.", "error");
+          }
+        } catch (err) {
+          finished = true;
+          clearInterval(pollTimer);
+          resetTx();
+          showMsg(err.message, "error");
+        }
+      }, 1500);
+    }
+
+    // Chrome only writes a download that originated from a real click (user
+    // activation). Downloading automatically at the end of polling is blocked
+    // silently: the entry shows up in the history with an internal name and
+    // nothing reaches the disk. So we show a button and let the user click it.
+    function offerDownload(jobId, title, channel) {
+      const base = (title || "transcript") + (channel ? " - " + channel : "");
+      resetTx();
+      txStage.classList.remove("hidden");
+      txStage.textContent = "Ready: " + base + ".txt";
+
+      txDl.classList.remove("hidden");
+      txDl.onclick = () => {
+        // Direct navigation: the server names the file via Content-Disposition.
+        window.location.href = "/api/transcript/" + jobId + "/download";
+        txDl.classList.add("hidden");
+        showMsg("Download started. If Chrome asks, choose where to save it.", "info");
+      };
+    }
+
+    // Strips only what the filesystem rejects; keeps accented characters.
+    function safeFileName(name) {
+      return name.replace(/[\/\\:*?"<>|]/g, "_").replace(/\s+/g, " ").trim();
+    }
+
+    function resetTx() {
+      txGo.disabled = false;
+      txGo.textContent = "Generate text";
+      txBar.classList.add("hidden");
+      txBar.firstElementChild.style.width = "0";
+      txStage.classList.add("hidden");
+    }
+
+    function startDownload(url, fmt, btn) {
+      const q = new URLSearchParams({ url, format_id: fmt.format_id });
+      showMsg(
+        "Preparing the download at " + fmt.resolution +
+        ". This can take a while depending on the size — the file will show up when it is ready.",
+        "info"
+      );
+      // Navigates to the endpoint; the browser handles the save-as dialog.
+      window.location.href = "/api/download?" + q.toString();
+    }
+  </script>
+</body>
+</html>
