@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help running it
+    url: https://github.com/ZenniTTy/youtube-downloader-local/discussions
+    about: Ask here instead of opening an issue.
+  - name: Security report
+    url: https://github.com/ZenniTTy/youtube-downloader-local/security/advisories/new
+    about: Report privately anything that lets the app be reached from outside the machine.

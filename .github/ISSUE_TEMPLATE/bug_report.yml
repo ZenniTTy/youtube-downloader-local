@@ -1,0 +1,64 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening: most download failures are environment issues, not bugs.
+        Check [When a video will not download](../../blob/main/README.md#when-a-video-will-not-download)
+        first — a missing JavaScript runtime causes `HTTP Error 403: Forbidden`,
+        and a missing ffmpeg breaks resolutions above 720p.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Checks
+      options:
+        - label: I am running it locally, not exposed on a network
+          required: true
+        - label: "`ffmpeg -version` and `node --version` both work in my terminal"
+          required: true
+        - label: I updated yt-dlp (`pip install -U yt-dlp`) and it still fails
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      description: The full message from the terminal running the server.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.3 / Ubuntu 24.04 / Windows 11
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "output of `python3 --version`"
+    validations:
+      required: true
+
+  - type: input
+    id: ytdlp
+    attributes:
+      label: yt-dlp version
+      placeholder: "output of `yt-dlp --version`"
+    validations:
+      required: true

@@ -1,0 +1,41 @@
+name: Idea or change
+description: Propose something before writing the code
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a personal, local-only utility, not a product. Proposals that
+        make sense only for a hosted service will most likely be declined — see
+        [CLAUDE.md](../../blob/main/CLAUDE.md) for the constraints.
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: This proposal does not
+      options:
+        - label: expose the app to the network or weaken the loopback lock
+          required: true
+        - label: add a heavy dependency or a frontend build step
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or impossible today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Including doing nothing.
