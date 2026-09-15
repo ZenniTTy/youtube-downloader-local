@@ -3,6 +3,7 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Scope](https://img.shields.io/badge/scope-100%25%20local-lightgrey)
+[![tests](https://github.com/ZenniTTy/youtube-downloader-local/actions/workflows/tests.yml/badge.svg)](https://github.com/ZenniTTy/youtube-downloader-local/actions/workflows/tests.yml)
 
 A local app to download YouTube videos as MP4 at the resolution you pick, and to
 generate text transcripts. It runs only on your machine (`localhost`) — nothing is
@@ -147,6 +148,16 @@ This is a personal project, so the bar is informal: open an issue describing the
 case before sending a large PR. Changes that expose the app to the network, add
 heavy dependencies or introduce a frontend build step will most likely be
 declined — see [`CLAUDE.md`](CLAUDE.md) for the reasoning.
+
+Before sending a PR, run the local-access test:
+
+```bash
+python3 test_loopback.py
+```
+
+It also runs in CI on every push and pull request. Found something that lets the
+app be reached from outside the machine? Report it privately instead — see
+[`SECURITY.md`](SECURITY.md).
 
 ## Credits
 
