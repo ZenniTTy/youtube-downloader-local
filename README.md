@@ -139,7 +139,7 @@ warranties, under the terms of the MIT license.
 | `test_loopback.py` | Verifies the local-access lock |
 
 Architecture notes live in [`CLAUDE.md`](CLAUDE.md), and the original design
-document in [`docs/superpowers/specs/`](docs/superpowers/specs/).
+document in [`docs/design-2026-07-12.md`](docs/design-2026-07-12.md).
 
 ## Contributing
 
